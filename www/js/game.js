@@ -5,10 +5,11 @@ let imgCircle = document.createElement('img');
 let imgCross = document.createElement('img');
 imgCircle.src = 'res/img/circle.png';
 imgCross.src = 'res/img/cross.png';
+const PORT = 3000;
 
 let gameState = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-let socket = io('http://localhost:3001');
+let socket = io(`http://localhost:${PORT}`);
 
 socket.on('connect', () => {
   logMessage('Socket connected!');

@@ -1,18 +1,18 @@
 const express = require('express');
 const http = require('http');
-const sio = require('socket.io');
+const socket_io = require('socket.io');
 const path = require('path');
 
 const app = express();
 app.disable('x-powered-by');
 app.use(express.static('www'));
 
-const server = app.listen(3000, () => 
-  console.log('Express server listening...'));
-const httpServer = http.Server(app);
-httpServer.listen(3001, () => 
-  console.log('HTTP server listening...'));
-const sioServer = sio(httpServer);
+const server = http.createServer(app);
+const sioServer = socket_io(server);
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, () => 
+  console.log(`Express server listening on port ${PORT}...`));
 
 // Game logic
 const connectedSockets = [];
