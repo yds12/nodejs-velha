@@ -3,13 +3,18 @@ const http = require('http');
 const socket_io = require('socket.io');
 const path = require('path');
 
+// Environment
+const prodHost = 'https://node-velha.herokuapp.com/';
+const PORT = process.env.PORT || 3000;
+const production = process.env.NODE_ENV === 'production' ? true : false;
+const HOST = production? prodHost : 'http://localhost';
+
+// Servers setup
 const app = express();
 app.disable('x-powered-by');
-app.use(express.static('www'));
 
 const server = http.createServer(app);
 const sioServer = socket_io(server);
-const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, () => 
   console.log(`Express server listening on port ${PORT}...`));
@@ -23,12 +28,22 @@ function getPlayerSocket(playerNum){
   return connectedSockets[playerNum - 1];
 }
 
-app.get('/game', (req, res) => {
-  res.sendFile(path.join(__dirname, 'game.html'));
+// Routes
+app.use(express.static('www'));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'www/index.html'));
 });
 
+app.get('/js/config.js', (req, res) => {
+  res.set('Content-Type', 'application/javascript');
+  res.send(`const PORT = ${PORT};\nconst HOST = '${HOST}';`);
+});
+
+// Sockets
 sioServer.on('connection', (socket) => {
   console.log('Socket client connected.', socket.id);
+  sioServer.sockets.emit('state', gameState);
 
   if(connectedSockets.length === 0){
     socket.emit('message', 'You are player 1 (X).');
