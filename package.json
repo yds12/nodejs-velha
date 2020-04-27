@@ -4,7 +4,8 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "if [$NODE_ENV == 'production']; then node server.js; else nodemon; fi",
+    "start": "node server.js",
+    "startd": "nodemon",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
