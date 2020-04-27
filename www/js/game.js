@@ -1,11 +1,27 @@
 let divMsg = document.getElementById('messages');
 let canvas = document.getElementById('screen');
 let ctx = canvas.getContext('2d');
+let imgCircle = document.createElement('img');
+let imgCross = document.createElement('img');
+imgCircle.src = 'res/img/circle.png';
+imgCross.src = 'res/img/cross.png';
 
-let socket = io('http://localhost:3000');
+let gameState = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+let socket = io('http://localhost:3001');
 
 socket.on('connect', () => {
   logMessage('Socket connected!');
+});
+
+socket.on('message', (msg) => {
+  logMessage(msg);
+});
+
+socket.on('state', (state) => {
+  logMessage(`State ${JSON.stringify(state)} received`);
+  gameState = state;
+  drawBoard();
 });
 
 const SCREEN_W = canvas.width;
@@ -18,9 +34,27 @@ const BOARD = {
 
 console.log(SCREEN_W);
 
+function drawBoard(){
+  ctx.clearRect(0, 0, SCREEN_W, SCREEN_H);
+
+  for(let i = 0; i <= 2; i++){
+    for(let j = 0; j <= 2; j++){
+      let cell = gameState[j * 3 + i];
+
+      if(cell === 1){ // draw X
+        ctx.drawImage(imgCross, 
+          BOARD.x + BOARD.tile * i, BOARD.y + BOARD.tile * j);
+      } else if (cell === 2) { // draw O
+        ctx.drawImage(imgCircle, 
+          BOARD.x + BOARD.tile * i, BOARD.y + BOARD.tile * j);
+      }
+    }
+  }
+}
+
 canvas.onmousemove = (event) => {
 //  divMsg.innerHTML += event.clientX + ' ' + event.clientY + '; '
-  ctx.clearRect(0, 0, SCREEN_W, SCREEN_H);
+  drawBoard();
   quad = findQuadrant(event.clientX, event.clientY);
 
   if(quad){
