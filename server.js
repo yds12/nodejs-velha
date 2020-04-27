@@ -4,7 +4,7 @@ const socket_io = require('socket.io');
 const path = require('path');
 
 // Environment
-const prodHost = 'https://node-velha.herokuapp.com/';
+const prodHost = 'https://node-velha.herokuapp.com';
 const PORT = process.env.PORT || 3000;
 const production = process.env.NODE_ENV === 'production' ? true : false;
 const HOST = production? prodHost : 'http://localhost';
