@@ -19,13 +19,14 @@ let gameState = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 const SCREEN_W = canvas.width;
 const SCREEN_H = canvas.height;
 const BOARD = {
-  x: 100,
-  y: 100,
-  tile: 150
+  x: 5,
+  y: 5,
+  tile: 130
 };
 
 // Event Handling (sockets)
 socket.on('connect', () => {
+  clearMessages();
   logMessage('Socket connected!');
 });
 
@@ -34,7 +35,7 @@ socket.on('message', (msg) => {
 });
 
 socket.on('state', (state) => {
-  logMessage(`State ${JSON.stringify(state)} received`);
+  console.log(`State ${JSON.stringify(state)} received`);
   gameState = state;
   drawBoard();
 });
@@ -88,6 +89,10 @@ function logMessage(msg){
   let date = new Date();
   let time = date.toLocaleTimeString();
   divMsg.innerHTML = time + ': ' + msg + '</br>' + divMsg.innerHTML;
+}
+
+function clearMessages(){
+  divMsg.innerHTML = '';
 }
 
 // Event handling (window)

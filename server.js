@@ -74,7 +74,8 @@ app.get('/js/config.js', (req, res) => {
 // Sockets
 sioServer.on('connection', (socket) => {
   console.log(`Client ${socket.id} connected.`);
-  socket.emit('message', `Hello, your ID is ${socket.id}.`);
+  socket.emit('message', 
+    `Hello, your ID is ${socket.id}. Waiting for a partner...`);
   queue.push(socket);
   alocatePlayers();
 

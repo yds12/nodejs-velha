@@ -7,21 +7,21 @@ class Game {
   constructor(player1, player2){
     this.player1 = player1;
     this.player2 = player2;
-    this.welcome();
     this.reset();
   }
 
   welcome(){
     this.player1.emit('message',
-      `You are player 1, and your rival has ID ${this.player2.id}`);
+      `You are player 1, and your rival's ID is ${this.player2.id}`);
     this.player2.emit('message',
-      `You are player 2, and your rival has ID ${this.player1.id}`);
+      `You are player 2, and your rival's ID is ${this.player1.id}`);
   }
 
   reset(){
     this.state = ONGOING;
     this.gameState = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     this.turn = 0;
+    this.welcome();
     this.sendState();
   }
 
@@ -77,16 +77,23 @@ class Game {
 
   checkWin(){
     const winner = this.getWinner();
+    
+    if(this.turn === 8 && winner <= 0){
+      this.player1.emit('message', 'Draw!');
+      this.player2.emit('message', 'Draw!');
+      this.state = FINISHED;
+    }
+    else{
+      if(winner <= 0) return;
+      this.state = FINISHED;
 
-    if(winner <= 0) return;
-    this.state = FINISHED;
-
-    if(winner === 1){
-      this.player1.emit('message', 'Congratulations, you won!');
-      this.player2.emit('message', 'You lost!');
-    } else{
-      this.player2.emit('message', 'Congratulations, you won!');
-      this.player1.emit('message', 'You lost!');
+      if(winner === 1){
+        this.player1.emit('message', 'Congratulations, you won!');
+        this.player2.emit('message', 'You lost!');
+      } else{
+        this.player2.emit('message', 'Congratulations, you won!');
+        this.player1.emit('message', 'You lost!');
+      }
     }
   }
 
@@ -95,15 +102,20 @@ class Game {
     const gs = this.gameState;
 
     for(let i = 0; i < 3; i++){
-      for(let j = 0; j < 3; j++){
-        if(gs[i*j] === gs[i*j + 1] && gs[i*j + 1] === gs[i*j + 2] 
-          && gs[i*j] > 0)
-          return gs[i*j];
-        if(gs[i] === gs[i + j*1] && gs[i + j*1] === gs[i + j*2] 
-          && gs[i] > 0)
-          return gs[i*j];
-      }
+      if(gs[i*3] === gs[i*3 + 1] && gs[i*3 + 1] === gs[i*3 + 2] 
+        && gs[i*3] > 0)
+        return gs[i*3];
+      if(gs[i] === gs[i + 3] && gs[i + 3] === gs[i + 6] 
+        && gs[i] > 0)
+        return gs[i];
     }
+
+    if(gs[0] === gs[4] && gs[4] === gs[8] && gs[0] > 0)
+      return gs[0];
+    if(gs[2] === gs[4] && gs[4] === gs[6] && gs[2] > 0)
+      return gs[2];
+
+    return 0;
   }
 }
 
