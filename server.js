@@ -25,6 +25,24 @@ function getPlayerSocket(playerNum){
   return connectedSockets[playerNum - 1];
 }
 
+function getPlayerStatus(socket){
+  if(connectedSockets.length > 0 && connectedSockets[0].id === socket.id)
+    return 'player 1 (X)';
+  if(connectedSockets.length > 1 && connectedSockets[1].id === socket.id)
+    return 'player 2 (O)';
+  if(connectedSockets.findIndex(client => client.id === socket.id) !== -1)
+    return 'observer';
+}
+
+function removeDisconnected(socket){
+  let idx = connectedSockets.findIndex(client => client.id === socket.id);
+  if(idx === -1){
+    console.log('There is no client with ID: ', socket.id);
+    return;
+  }
+  connectedSockets.splice(idx, 1);
+}
+
 // Routes
 app.use(express.static('www'));
 
@@ -38,20 +56,28 @@ app.get('/js/config.js', (req, res) => {
 });
 
 // Sockets
-sioServer.on('connection', (socket) => {
-  console.log('Socket client connected.', socket.id);
-  sioServer.sockets.emit('state', gameState);
+function forAllSockets(callback){
+  Object.keys(sioServer.sockets.sockets).forEach(
+    key => callback(sioServer.sockets.sockets[key]));
+}
 
-  if(connectedSockets.length === 0){
-    socket.emit('message', 'You are player 1 (X).');
-    connectedSockets.push(socket);
-  } else if(connectedSockets.length === 1){
-    socket.emit('message', 'You are player 2 (O).');
-    connectedSockets.push(socket);
-  } else{
-    socket.emit('message', 'You are an observer.');
-    connectedSockets.push(socket);
-  }
+sioServer.on('connection', (socket) => {
+  console.log(`Client ${socket.id} connected.`);
+  sioServer.sockets.emit('state', gameState);
+  connectedSockets.push(socket);
+  const player = getPlayerStatus(socket);
+  socket.emit('message', `You are connected as ${player}.`);
+
+  socket.on('disconnect', () => {
+    console.log(`Client ${socket.id} disconnected.`);
+    removeDisconnected(socket);
+    sioServer.sockets.emit('message', `Client ${socket.id} has disconnected.`);
+
+    forAllSockets((otherSocket) => {
+      const otherPlayer = getPlayerStatus(otherSocket);
+      otherSocket.emit('message', `You are connected as ${otherPlayer}.`);
+    });
+  });
 
   socket.on('click', pos => {
     console.log(
