@@ -63,5 +63,12 @@ sioServer.on('connection', (socket) => {
       gameState[pos.y * 3 + pos.x] = 2;
 
     sioServer.sockets.emit('state', gameState);
+    turn++;
+  });
+
+  socket.on('clear', () => {
+    gameState = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    turn = 0;
+    sioServer.sockets.emit('state', gameState);
   });
 });

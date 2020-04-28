@@ -1,15 +1,16 @@
 let divMsg = document.getElementById('messages');
+let btnClear = document.getElementById('clear');
 let canvas = document.getElementById('screen');
 let ctx = canvas.getContext('2d');
 let imgCircle = document.createElement('img');
 let imgCross = document.createElement('img');
 imgCircle.src = 'res/img/circle.png';
 imgCross.src = 'res/img/cross.png';
-const HOST = window.location.hostname;
 
+const HOST = window.location.hostname;
 const connectTo = (HOST === 'localhost')? `${HOST}:${PORT}`: HOST;
-//let socket = io(`${HOST}:${PORT}`);
 let socket = io(connectTo);
+
 let gameState = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 socket.on('connect', () => {
@@ -70,6 +71,10 @@ canvas.onclick = (event) => {
   quad = findQuadrant(event.clientX, event.clientY);
 
   if(quad) socket.emit('click', quad);
+};
+
+btnClear.onclick = (event) => {
+  socket.emit('clear');
 };
 
 function logMessage(msg){
