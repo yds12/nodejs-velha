@@ -7,7 +7,9 @@ imgCircle.src = 'res/img/circle.png';
 imgCross.src = 'res/img/cross.png';
 const HOST = window.location.hostname;
 
-let socket = io(`${HOST}:${PORT}`);
+const connectTo = (HOST === 'localhost')? `${HOST}:${PORT}`: HOST;
+//let socket = io(`${HOST}:${PORT}`);
+let socket = io(connectTo);
 let gameState = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 socket.on('connect', () => {
