@@ -5,6 +5,7 @@ let imgCircle = document.createElement('img');
 let imgCross = document.createElement('img');
 imgCircle.src = 'res/img/circle.png';
 imgCross.src = 'res/img/cross.png';
+const HOST = window.location.hostname;
 
 let socket = io(`${HOST}:${PORT}`);
 let gameState = [0, 0, 0, 0, 0, 0, 0, 0, 0];

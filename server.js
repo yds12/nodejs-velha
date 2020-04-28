@@ -4,10 +4,7 @@ const socket_io = require('socket.io');
 const path = require('path');
 
 // Environment
-const prodHost = 'https://node-velha.herokuapp.com';
 const PORT = process.env.PORT || 3000;
-const production = process.env.NODE_ENV === 'production' ? true : false;
-const HOST = production? prodHost : 'http://localhost';
 
 // Servers setup
 const app = express();
@@ -37,7 +34,7 @@ app.get('/', (req, res) => {
 
 app.get('/js/config.js', (req, res) => {
   res.set('Content-Type', 'application/javascript');
-  res.send(`const PORT = ${PORT};\nconst HOST = '${HOST}';`);
+  res.send(`const PORT = ${PORT};`);
 });
 
 // Sockets
