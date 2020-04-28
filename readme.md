@@ -17,4 +17,5 @@ Then clone (or download) this repository, `cd` into the directory...
 
     npm run startd
 
-Then open your browser and visit `localhost:3000`.
+Then open your browser and visit `localhost:PORT` (`PORT` as defined in the
+variable `CONFIG.localPort` in `config.js`.

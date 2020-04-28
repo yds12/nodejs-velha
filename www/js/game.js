@@ -1,3 +1,9 @@
+// Socket setup
+const HOST = window.location.hostname;
+const connectTo = (HOST === 'localhost')? `${HOST}:${PORT}`: HOST;
+let socket = io(connectTo);
+
+// Screen elements
 let divMsg = document.getElementById('messages');
 let btnClear = document.getElementById('clear');
 let canvas = document.getElementById('screen');
@@ -7,12 +13,18 @@ let imgCross = document.createElement('img');
 imgCircle.src = 'res/img/circle.png';
 imgCross.src = 'res/img/cross.png';
 
-const HOST = window.location.hostname;
-const connectTo = (HOST === 'localhost')? `${HOST}:${PORT}`: HOST;
-let socket = io(connectTo);
-
+// Game variables
 let gameState = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 
+const SCREEN_W = canvas.width;
+const SCREEN_H = canvas.height;
+const BOARD = {
+  x: 100,
+  y: 100,
+  tile: 150
+};
+
+// Event Handling (sockets)
 socket.on('connect', () => {
   logMessage('Socket connected!');
 });
@@ -27,16 +39,7 @@ socket.on('state', (state) => {
   drawBoard();
 });
 
-const SCREEN_W = canvas.width;
-const SCREEN_H = canvas.height;
-const BOARD = {
-  x: 100,
-  y: 100,
-  tile: 150
-};
-
-console.log(SCREEN_W);
-
+// Game functions
 function drawBoard(){
   ctx.clearRect(0, 0, SCREEN_W, SCREEN_H);
 
@@ -53,32 +56,6 @@ function drawBoard(){
       }
     }
   }
-}
-
-canvas.onmousemove = (event) => {
-//  divMsg.innerHTML += event.clientX + ' ' + event.clientY + '; '
-  drawBoard();
-  quad = findQuadrant(event.clientX, event.clientY);
-
-  if(quad){
-    ctx.fillStyle = '#33333388';
-    ctx.fillRect(BOARD.x + quad.x * BOARD.tile, 
-      BOARD.y + quad.y * BOARD.tile, BOARD.tile, BOARD.tile);
-  }
-};
-
-canvas.onclick = (event) => {
-  quad = findQuadrant(event.clientX, event.clientY);
-
-  if(quad) socket.emit('click', quad);
-};
-
-btnClear.onclick = (event) => {
-  socket.emit('clear');
-};
-
-function logMessage(msg){
-  divMsg.innerHTML += msg + '</br>';
 }
 
 function findQuadrant(x, y){
@@ -105,3 +82,31 @@ function findQuadrant(x, y){
 
   return pos;
 }
+
+// Helper functions
+function logMessage(msg){
+  divMsg.innerHTML += msg + '</br>';
+}
+
+// Event handling (window)
+canvas.onmousemove = (event) => {
+//  divMsg.innerHTML += event.clientX + ' ' + event.clientY + '; '
+  drawBoard();
+  quad = findQuadrant(event.clientX, event.clientY);
+
+  if(quad){
+    ctx.fillStyle = '#33333388';
+    ctx.fillRect(BOARD.x + quad.x * BOARD.tile, 
+      BOARD.y + quad.y * BOARD.tile, BOARD.tile, BOARD.tile);
+  }
+};
+
+canvas.onclick = (event) => {
+  quad = findQuadrant(event.clientX, event.clientY);
+
+  if(quad) socket.emit('click', quad);
+};
+
+btnClear.onclick = (event) => {
+  socket.emit('clear');
+};

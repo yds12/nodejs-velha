@@ -1,10 +1,8 @@
+const CONFIG = require('./config');
 const express = require('express');
 const http = require('http');
 const socket_io = require('socket.io');
 const path = require('path');
-
-// Environment
-const PORT = process.env.PORT || 3000;
 
 // Servers setup
 const app = express();
@@ -13,8 +11,8 @@ app.disable('x-powered-by');
 const server = http.createServer(app);
 const sioServer = socket_io(server);
 
-server.listen(PORT, () => 
-  console.log(`Express server listening on port ${PORT}...`));
+server.listen(CONFIG.port, () => 
+  console.log(`Express server listening on port ${CONFIG.port}...`));
 
 // Game logic
 const connectedSockets = [];
@@ -44,15 +42,15 @@ function removeDisconnected(socket){
 }
 
 // Routes
-app.use(express.static('www'));
+app.use(express.static(CONFIG.publicDir));
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'www/index.html'));
+  res.sendFile(path.join(__dirname, CONFIG.publicDir, 'index.html'));
 });
 
 app.get('/js/config.js', (req, res) => {
   res.set('Content-Type', 'application/javascript');
-  res.send(`const PORT = ${PORT};`);
+  res.send(`const PORT = ${CONFIG.port};`);
 });
 
 // Sockets
