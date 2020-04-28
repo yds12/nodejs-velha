@@ -1,4 +1,5 @@
 const CONFIG = require('./config');
+const Game = require('./game');
 const express = require('express');
 const http = require('http');
 const socket_io = require('socket.io');
@@ -14,31 +15,48 @@ const sioServer = socket_io(server);
 server.listen(CONFIG.port, () => 
   console.log(`Express server listening on port ${CONFIG.port}...`));
 
-// Game logic
-const connectedSockets = [];
-let turn = 0;
-let gameState = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+// Player/Game management
+let games = [];
+let queue = [];
 
-function getPlayerSocket(playerNum){
-  return connectedSockets[playerNum - 1];
-}
-
-function getPlayerStatus(socket){
-  if(connectedSockets.length > 0 && connectedSockets[0].id === socket.id)
-    return 'player 1 (X)';
-  if(connectedSockets.length > 1 && connectedSockets[1].id === socket.id)
-    return 'player 2 (O)';
-  if(connectedSockets.findIndex(client => client.id === socket.id) !== -1)
-    return 'observer';
-}
-
-function removeDisconnected(socket){
-  let idx = connectedSockets.findIndex(client => client.id === socket.id);
-  if(idx === -1){
-    console.log('There is no client with ID: ', socket.id);
-    return;
+function alocatePlayers(){
+  while(queue.length >= 2){
+    games.push(new Game(queue[0], queue[1]));
+    queue.splice(0, 2);
   }
-  connectedSockets.splice(idx, 1);
+}
+
+function findGame(playerId){
+  return games.findIndex(game => 
+    (game.player1.id === playerId || game.player2.id === playerId));
+}
+
+function removeDisconnected(playerId){
+  let gameIdx = findGame(playerId);
+
+  if(gameIdx === -1){
+    let idx = queue.findIndex(client => client.id === playerId);
+    if(idx === -1){
+      console.log('There is no client with ID: ', playerId);
+      return;
+    }
+    queue.splice(idx, 1);
+  } else{
+    let game = games[gameIdx];
+    game.reset();
+    let otherPlayer = null;
+
+    if(game.player1.id !== playerId)
+      otherPlayer = game.player1;
+    else if(game.player2 !== playerId)
+      otherPlayer = game.player2;
+
+    queue.push(otherPlayer);
+    otherPlayer.emit('terminate');
+    otherPlayer.emit('message', 
+      `Player ${playerId} disconnected. Waiting for new partner...`);
+    games.splice(gameIdx, 1);
+  }
 }
 
 // Routes
@@ -54,45 +72,27 @@ app.get('/js/config.js', (req, res) => {
 });
 
 // Sockets
-function forAllSockets(callback){
-  Object.keys(sioServer.sockets.sockets).forEach(
-    key => callback(sioServer.sockets.sockets[key]));
-}
-
 sioServer.on('connection', (socket) => {
   console.log(`Client ${socket.id} connected.`);
-  sioServer.sockets.emit('state', gameState);
-  connectedSockets.push(socket);
-  const player = getPlayerStatus(socket);
-  socket.emit('message', `You are connected as ${player}.`);
+  socket.emit('message', `Hello, your ID is ${socket.id}.`);
+  queue.push(socket);
+  alocatePlayers();
 
   socket.on('disconnect', () => {
     console.log(`Client ${socket.id} disconnected.`);
-    removeDisconnected(socket);
-    sioServer.sockets.emit('message', `Client ${socket.id} has disconnected.`);
-
-    forAllSockets((otherSocket) => {
-      const otherPlayer = getPlayerStatus(otherSocket);
-      otherSocket.emit('message', `You are connected as ${otherPlayer}.`);
-    });
+    removeDisconnected(socket.id);
   });
 
   socket.on('click', pos => {
     console.log(
-      `Socket ${socket.id} clicked on quadrant ${pos.x}, ${pos.y}`);
+      `Client ${socket.id} clicked on quadrant ${pos.x}, ${pos.y}`);
 
-    if(socket.id === getPlayerSocket(1).id)
-      gameState[pos.y * 3 + pos.x] = 1;
-    else if(socket.id === getPlayerSocket(2).id)
-      gameState[pos.y * 3 + pos.x] = 2;
-
-    sioServer.sockets.emit('state', gameState);
-    turn++;
+    idx = findGame(socket.id);
+    if(idx !== -1) games[idx].update(socket.id, pos.x, pos.y);
   });
 
   socket.on('clear', () => {
-    gameState = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-    turn = 0;
-    sioServer.sockets.emit('state', gameState);
+    idx = findGame(socket.id);
+    if(idx !== -1) games[idx].reset();
   });
 });

@@ -85,7 +85,9 @@ function findQuadrant(x, y){
 
 // Helper functions
 function logMessage(msg){
-  divMsg.innerHTML += msg + '</br>';
+  let date = new Date();
+  let time = date.toLocaleTimeString();
+  divMsg.innerHTML = time + ': ' + msg + '</br>' + divMsg.innerHTML;
 }
 
 // Event handling (window)
